@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>数数游戏</title>
   <style>
+    .game-introduction {
+      position: absolute;
+      top: 20px; /* 距离页面顶部的距离 */
+      right: 20px; /* 距离页面右侧的距离 */
+      padding: 10px;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      border: 2px solid #999595;
+      border-radius: 5px;
+      max-width: 400px; /* 最大宽度 */
+      text-align: left;
+    }
     body {
       margin: 0;
       padding: 0;
@@ -67,11 +79,11 @@
       text-align: center;
     }
     th {
-      background-color: #555;
+      background-color: #1f1b1b;
     }
-    tr:nth-child(even) {
-      background-color: #444;
-    }
+    /*tr:nth-child(even) {*/
+    /*  background-color: #444;*/
+    /*}*/
     tr:hover {
       background-color: #666;
     }
@@ -79,9 +91,17 @@
 </head>
 <body>
   <div id="app" class="terminal">
-    <h1>数数游戏</h1>
+    <div class="game-introduction">
+        <h2 style="text-align: center">游戏玩法介绍</h2>
+        <p>1.输入游戏难度(1-10的数字)并点击 开始游戏</p>
+        <p>2.系统将生成一组(游戏难度*10)随机数字数组</p>
+        <p>3.您需要找出系统指定的数字共出现的次数</p>
+        <p>4.点击“提交”按钮，系统将判断您的答案是否正确</p>
+        <p>5.答案正确,将添加到排行榜中,游戏结束后更新排行榜</p>
+    </div>
+    <h1>快速数数</h1>
     <div v-if="!gameStarted">
-      <p>请输入难度（1-10的数字）：</p>
+      <p>请输入难度（1-10的数字）</p>
       <input v-model="difficulty" type="number" class="form-control" placeholder="输入数字1-10">
       <button @click="startGame" class="mt-3">开始游戏</button>
     </div>
@@ -99,7 +119,7 @@
 
     <div class="leaderboard-box">
       <h3>排行榜</h3>
-      <table :showPagination="false">
+      <table>
         <thead>
           <tr>
             <th>名次</th>
@@ -145,6 +165,7 @@
             isCorrect: false,
             countdown: 3,
             leaderboard: [],
+            startTime: null,
           };
         },
         methods: {
@@ -171,6 +192,7 @@
             this.gameStarted = true;
             this.showResult = false;
             this.userAnswer = null;
+            this.startTime = Date.now();
           },
           generateRandomNumber(length) {
             let num = '';
@@ -182,6 +204,10 @@
           checkAnswer() {
             this.showResult = true;
             const digitOccurrences = this.countDigitOccurrences(this.selectedDigit);
+
+            const endTime = Date.now();
+            const gameTime = (endTime - this.startTime) /1000;
+            this.showResult = true;
 
             // Convert the user's answer to a number
             const userAnswerAsNumber = parseInt(this.userAnswer);
@@ -197,7 +223,8 @@
               if (count === 0) {
                 clearInterval(countdownInterval);
                 if (this.isCorrect) {
-                  this.updateLeaderboard();
+                  this.updateLeaderboard(gameTime);
+                  // this.updateLeaderboard();
                 }
                 this.restartGame();
               }
@@ -217,18 +244,19 @@
             this.isCorrect = false;
             this.countdown = 3;
           },
-          updateLeaderboard() {
+          updateLeaderboard(gameTime) {
             const entry = {
               playerId: this.generatePlayerId(),
               difficulty: this.difficulty,
-              time: 3 - this.countdown,
+              timedown: 3 - this.countdown,
+              time: gameTime,
             };
 
             this.leaderboard.push(entry);
 
             this.leaderboard.sort((a, b) => {
               if (a.difficulty === b.difficulty) {
-                return a.time - b.time;
+                return a.timedown - b.timedown;
               } else {
                 return b.difficulty - a.difficulty;
               }
